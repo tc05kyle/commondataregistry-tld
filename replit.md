@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a Streamlit-based Data Registry Platform that manages canonical unique IDs for individuals and organizations. The platform provides a complete admin dashboard system with role-based access control, email notifications, and API services for client applications.
+This is a Streamlit-based Data Registry Platform that manages canonical unique IDs for individuals and organizations. The platform provides a complete admin dashboard system with role-based access control, email notifications, and API services for client applications. The system now includes static file serving, custom CSS styling, and production-ready database configurations with fallback storage capabilities.
 
 ## User Preferences
 
@@ -78,9 +78,16 @@ Preferred communication style: Simple, everyday language.
 - **Purpose**: Automated notifications for registration status
 
 ### Database
-- **Type**: PostgreSQL
-- **Connection**: Environment variable configuration
-- **Fallback**: Local development settings
+- **Primary**: PostgreSQL with automatic reconnection
+- **Fallback**: In-memory storage system for high availability
+- **Production**: Replit Database integration as secondary fallback
+- **Connection**: Environment variable configuration with multi-tier fallback
+
+### Static Files and Media
+- **CSS**: Custom styling with Streamlit integration
+- **JavaScript**: Client-side enhancements and form validation
+- **Images**: SVG logo and static assets served via Streamlit
+- **Storage**: Local static directory with proper serving configuration
 
 ### Validation Libraries
 - **Pydantic**: Data validation and serialization

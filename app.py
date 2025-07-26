@@ -4,6 +4,7 @@ import os
 from database.connection import init_database, get_db_connection
 from services.email_service import EmailService
 from utils.security import hash_password, verify_password
+from utils.static_files import inject_custom_css, display_logo
 import hashlib
 
 # Initialize database on startup
@@ -28,8 +29,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Inject custom CSS and setup static files
+inject_custom_css()
+
 def main():
-    st.title("🏢 Data Registry Platform")
+    # Display logo and title
+    display_logo()
     st.markdown("---")
     
     # Authentication check
