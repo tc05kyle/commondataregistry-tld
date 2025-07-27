@@ -6,6 +6,7 @@ from services.email_service import EmailService
 from utils.security import hash_password, verify_password
 from utils.static_files import inject_custom_css, display_logo
 from utils.db_status import display_db_status
+from config.production_config import prod_config
 import hashlib
 
 # Initialize database on startup
@@ -118,6 +119,15 @@ def dashboard_page():
     # Display database status
     display_db_status()
     
+    # Show production services status for admins
+    if st.sidebar.checkbox("Show Production Status", value=False):
+        st.sidebar.markdown("### Production Services")
+        missing_secrets = prod_config.get_missing_secrets()
+        if missing_secrets:
+            st.sidebar.error(f"{len(missing_secrets)} secrets missing")
+        else:
+            st.sidebar.success("All secrets configured")
+    
     if st.sidebar.button("Logout"):
         st.session_state.authenticated = False
         st.session_state.admin_type = None
@@ -141,6 +151,7 @@ def dashboard_page():
     st.markdown("- **Registration Request**: Submit new registration requests")
     st.markdown("- **API Testing**: Test API endpoints")
     st.markdown("- **Registry Lookup**: Search and lookup registered IDs")
+    st.markdown("- **Production Config**: Manage production services (Linode, SendGrid)")
 
 def display_system_stats():
     """Display system statistics"""

@@ -1,15 +1,41 @@
-"""Email service using SendGrid"""
+"""Production email service using SendGrid with enhanced features"""
 import os
 import sys
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, FileContent, FileName, FileType, Disposition
 import streamlit as st
+from typing import Optional, List, Dict, Any
+import base64
+import json
+from datetime import datetime
 
 class EmailService:
     def __init__(self):
-        self.api_key = os.getenv('SENDGRID_API_KEY', 'default_sendgrid_key')
-        self.from_email = "noreply@dataregistry.com"
-        self.sg = SendGridAPIClient(self.api_key)
+        self.api_key = os.getenv('SENDGRID_API_KEY')
+        self.from_email = os.getenv('SENDGRID_FROM_EMAIL', "noreply@dataregistry.com")
+        self.from_name = os.getenv('SENDGRID_FROM_NAME', "Data Registry Platform")
+        self.template_id_approval = os.getenv('SENDGRID_TEMPLATE_APPROVAL')
+        self.template_id_rejection = os.getenv('SENDGRID_TEMPLATE_REJECTION')
+        
+        if not self.api_key:
+            st.warning("SendGrid API key not configured. Email features will be disabled.")
+            self.sg = None
+        else:
+            self.sg = SendGridAPIClient(self.api_key)
+            self._verify_connection()
+    
+    def _verify_connection(self):
+        """Verify SendGrid connection and configuration"""
+        try:
+            # Test API key by getting account details
+            response = self.sg.client.user.get()
+            if response.status_code == 200:
+                st.success("SendGrid connection verified successfully")
+            else:
+                st.warning(f"SendGrid connection warning: {response.status_code}")
+        except Exception as e:
+            st.error(f"SendGrid verification failed: {e}")
+            self.sg = None
     
     def send_email(self, to_email, subject, text_content=None, html_content=None):
         """Send email using SendGrid"""
