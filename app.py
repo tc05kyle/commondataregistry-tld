@@ -151,6 +151,7 @@ def dashboard_page():
     st.markdown("- **Registration Request**: Submit new registration requests")
     st.markdown("- **API Testing**: Test API endpoints")
     st.markdown("- **Registry Lookup**: Search and lookup registered IDs")
+    st.markdown("- **User Dashboard**: Access your registered account dashboard")
     st.markdown("- **Production Config**: Manage production services (Linode, SendGrid)")
 
 def display_system_stats():

@@ -32,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 ### Core Application Files
 - **app.py**: Main application entry point with authentication and routing
 - **Database Layer**: Connection management and model definitions
-- **Services Layer**: Email, API, domain validation, and business logic
+- **Services Layer**: Email, API, domain validation, user authentication, and business logic
 - **Utils Layer**: Security, validation, and utility functions
 
 ### Page Components
@@ -41,12 +41,19 @@ Preferred communication style: Simple, everyday language.
 3. **Registration Request** (`pages/3_Registration_Request.py`)
 4. **API Testing** (`pages/4_API_Testing.py`)
 5. **Registry Lookup** (`pages/5_Registry_Lookup.py`)
+6. **Production Config** (`pages/6_Production_Config.py`)
+7. **User Dashboard** (`pages/7_User_Dashboard.py`)
 
 ### Service Components
-- **Email Service**: SendGrid integration for notification emails
+- **Email Service**: SendGrid integration for notification emails with production features
 - **API Service**: Rate-limited API key management and validation
 - **Domain Validator**: DNS and MX record validation for business domains
 - **Validation Service**: Pydantic-based data validation
+- **User Authentication**: Separate authentication system for registered users
+- **User Analytics**: Comprehensive analytics and insights for user dashboards
+- **Linode Storage**: Object storage integration for media and static files
+- **Linode Database**: Production PostgreSQL database integration
+- **Production Config**: Centralized production services management
 
 ## Data Flow
 
@@ -69,6 +76,14 @@ Preferred communication style: Simple, everyday language.
 2. Rate limiting and authentication
 3. Registry lookup and search capabilities
 4. JSON response formatting
+
+### User Dashboard System
+1. User authentication via canonical ID and email
+2. Comprehensive analytics and profile management
+3. Data visualization with interactive charts
+4. Activity history and account timeline
+5. Personalized recommendations and actions
+6. Data export capabilities for registered users
 
 ## External Dependencies
 
