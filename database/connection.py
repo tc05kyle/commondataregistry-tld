@@ -4,107 +4,51 @@ import os
 import streamlit as st
 from database.models import CREATE_TABLES_SQL, INSERT_DEFAULT_ADMINS_SQL
 from database.fallback_storage import fallback_storage
+from database.robust_connection import db_manager
 from utils.security import hash_password
 
 def get_db_connection():
-    """Get database connection using environment variables with fallback"""
-    try:
-        # Try using DATABASE_URL first (for services like Heroku)
-        database_url = os.getenv('DATABASE_URL')
-        if database_url:
-            conn = psycopg2.connect(database_url)
-            # Test the connection
-            cursor = conn.cursor()
-            cursor.execute('SELECT 1')
-            cursor.fetchone()
-            cursor.close()
-            return conn
-    except Exception as e:
-        st.warning(f"DATABASE_URL connection failed: {e}")
-        
-    try:
-        # Fall back to individual environment variables
-        conn = psycopg2.connect(
-            host=os.getenv('PGHOST', 'localhost'),
-            database=os.getenv('PGDATABASE', 'dataregistry'),
-            user=os.getenv('PGUSER', 'postgres'),
-            password=os.getenv('PGPASSWORD', 'password'),
-            port=os.getenv('PGPORT', '5432')
-        )
-        # Test the connection
-        cursor = conn.cursor()
-        cursor.execute('SELECT 1')
-        cursor.fetchone()
-        cursor.close()
-        return conn
-    except Exception as e:
-        st.error(f"Database connection failed with both methods: {e}")
-        st.info("The database may need to be re-enabled. Please contact support if this issue persists.")
-        raise
+    """Get database connection using robust connection manager"""
+    return db_manager.get_connection()
 
 def init_database():
     """Initialize database tables and default data, with fallback to in-memory storage"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Create tables
-        cursor.execute(CREATE_TABLES_SQL)
-        
-        # Insert default admin users with proper password hashing
-        # Hash default passwords
+        # Use the robust database manager
         individual_admin_hash = hash_password("admin123")
         organization_admin_hash = hash_password("admin123")
         
+        # Create tables
+        db_manager.execute_query(CREATE_TABLES_SQL)
+        
         # Insert default admins with hashed passwords
-        cursor.execute("""
-            INSERT INTO admins (username, password_hash, admin_type, email) 
+        db_manager.execute_query("""
+            INSERT INTO admins (username, password_hash, admin_type, email, is_active) 
             VALUES 
-                (%s, %s, 'Individual Admin', 'individual.admin@dataregistry.com'),
-                (%s, %s, 'Organization Admin', 'organization.admin@dataregistry.com')
+                (%s, %s, 'Individual Admin', 'individual.admin@dataregistry.com', TRUE),
+                (%s, %s, 'Organization Admin', 'organization.admin@dataregistry.com', TRUE)
             ON CONFLICT (username) DO UPDATE SET
                 password_hash = EXCLUDED.password_hash,
                 email = EXCLUDED.email
         """, ('individual_admin', individual_admin_hash, 'organization_admin', organization_admin_hash))
         
-        conn.commit()
         st.session_state.use_fallback_storage = False
+        st.success("Database initialized successfully")
         
     except Exception as e:
         # Initialize fallback storage instead
         fallback_storage.initialize()
         st.session_state.use_fallback_storage = True
-        st.error(f"Database initialization error: {e}")
-        raise
-    finally:
-        if 'conn' in locals():
-            conn.close()
+        st.warning("Database connection failed. Using in-memory storage mode.")
+        st.info("Data will not persist between sessions in this mode.")
 
 def execute_query(query, params=None, fetch=False):
     """Execute a database query with error handling"""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        if params:
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
-        
-        if fetch:
-            result = cursor.fetchall()
-            conn.commit()
-            return result
-        else:
-            conn.commit()
-            return cursor.rowcount
-            
+        return db_manager.execute_query(query, params, fetch)
     except Exception as e:
         st.error(f"Database query error: {e}")
         raise
-    finally:
-        if conn:
-            conn.close()
 
 def get_pending_registrations(entity_type):
     """Get pending registrations for a specific entity type"""

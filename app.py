@@ -5,19 +5,21 @@ from database.connection import init_database, get_db_connection
 from services.email_service import EmailService
 from utils.security import hash_password, verify_password
 from utils.static_files import inject_custom_css, display_logo
+from utils.db_status import display_db_status
 import hashlib
 
 # Initialize database on startup
-try:
-    init_database()
-    st.session_state.database_connected = True
-except Exception as e:
-    st.session_state.database_connected = False
-    # Initialize fallback storage
-    from database.fallback_storage import fallback_storage
-    fallback_storage.initialize()
-    st.warning("Database connection failed. Using in-memory storage mode.")
-    st.info("Data will not persist between sessions in this mode.")
+if 'database_initialized' not in st.session_state:
+    try:
+        init_database()
+        st.session_state.database_connected = True
+        st.session_state.database_initialized = True
+    except Exception as e:
+        st.session_state.database_connected = False
+        st.session_state.database_initialized = True
+        # Initialize fallback storage
+        from database.fallback_storage import fallback_storage
+        fallback_storage.initialize()
 
 # Initialize email service
 email_service = EmailService()
@@ -112,6 +114,9 @@ def authenticate_admin(username, password, admin_type):
 def dashboard_page():
     st.sidebar.success(f"Logged in as: {st.session_state.admin_type}")
     st.sidebar.markdown(f"**User:** {st.session_state.admin_username}")
+    
+    # Display database status
+    display_db_status()
     
     if st.sidebar.button("Logout"):
         st.session_state.authenticated = False
