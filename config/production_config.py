@@ -1,7 +1,7 @@
 """Production configuration management for Data Registry Platform"""
 import os
 import streamlit as st
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from services.linode_storage import linode_storage
 from services.linode_database import linode_db
 from services.email_service import EmailService

@@ -42,7 +42,7 @@ def main():
         if st.button("🔄 Refresh Service Status", help="Check all services and update status"):
             prod_config._check_services()
             st.success("Service status refreshed")
-            st.experimental_rerun()
+            st.rerun()
         
         if st.button("🚀 Setup Production Deployment", help="Initialize all production services"):
             with st.spinner("Setting up production deployment..."):
