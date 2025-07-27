@@ -32,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 ### Core Application Files
 - **app.py**: Main application entry point with authentication and routing
 - **Database Layer**: Connection management and model definitions
-- **Services Layer**: Email, API, domain validation, user authentication, and business logic
+- **Services Layer**: Email, API, domain validation, user authentication, analytics, and animated dashboard services
 - **Utils Layer**: Security, validation, and utility functions
 
 ### Page Components
@@ -51,6 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **Validation Service**: Pydantic-based data validation
 - **User Authentication**: Separate authentication system for registered users
 - **User Analytics**: Comprehensive analytics and insights for user dashboards
+- **Animated Dashboard**: Advanced visualization service with CSS animations, progress rings, timeline charts, and personalized insights
 - **Linode Storage**: Object storage integration for media and static files
 - **Linode Database**: Production PostgreSQL database integration
 - **Production Config**: Centralized production services management
@@ -79,11 +80,14 @@ Preferred communication style: Simple, everyday language.
 
 ### User Dashboard System
 1. User authentication via canonical ID and email
-2. Comprehensive analytics and profile management
-3. Data visualization with interactive charts
-4. Activity history and account timeline
-5. Personalized recommendations and actions
-6. Data export capabilities for registered users
+2. Animated welcome header with personalized greetings
+3. Interactive metrics with CSS animations and smooth transitions
+4. Progress rings showing completion status with animated fills
+5. Timeline visualization of user journey and milestones
+6. Personalized insights and recommendations with priority-based styling
+7. Activity heatmaps and comparison radar charts
+8. Enhanced data export capabilities with multiple formats
+9. Comprehensive analytics and profile management
 
 ## External Dependencies
 

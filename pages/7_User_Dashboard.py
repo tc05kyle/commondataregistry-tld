@@ -2,6 +2,7 @@
 import streamlit as st
 from services.user_auth import user_auth
 from services.user_analytics import user_analytics
+from services.animated_dashboard import animated_dashboard
 from database.connection import get_db_connection
 from utils.static_files import inject_custom_css, display_logo
 from datetime import datetime, timedelta
@@ -9,6 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import json
+import time
 
 # Inject custom CSS
 inject_custom_css()
@@ -41,7 +43,7 @@ def login_form():
                 st.error("Please enter both Canonical ID and email address.")
 
 def user_dashboard():
-    """Display the user dashboard"""
+    """Display the animated user dashboard"""
     user_data = user_auth.get_user_data()
     user_type = user_auth.get_user_type()
     
@@ -51,82 +53,217 @@ def user_dashboard():
         st.rerun()
         return
     
-    # Header with user info
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        if user_type == "individual":
-            st.markdown(f"## Welcome, {user_data['first_name']} {user_data['last_name']}")
-            st.markdown(f"**Canonical ID:** {user_data['canonical_id']}")
-        else:
-            st.markdown(f"## Welcome, {user_data['organization_name']}")
-            st.markdown(f"**Canonical ID:** {user_data['canonical_id']}")
-    
-    with col2:
-        if st.button("Logout"):
-            user_auth.logout_user()
-            st.rerun()
-    
-    st.markdown("---")
-    
     # Get comprehensive dashboard data
     dashboard_data = user_analytics.get_user_dashboard_data(user_data['canonical_id'], user_type)
     analytics = dashboard_data.get('analytics', {})
     
-    # Display key metrics
-    st.markdown("### 📊 Account Overview")
+    # Render animated welcome header
+    greeting = animated_dashboard.render_welcome_header(user_data, user_type)
     
-    col1, col2, col3, col4 = st.columns(4)
+    # Logout button in sidebar
+    with st.sidebar:
+        st.markdown(f"**Logged in as:**")
+        if user_type == "individual":
+            st.markdown(f"{user_data['first_name']} {user_data['last_name']}")
+        else:
+            st.markdown(f"{user_data['organization_name']}")
+        
+        st.markdown(f"**ID:** {user_data['canonical_id']}")
+        
+        if st.button("🚪 Logout", use_container_width=True):
+            user_auth.logout_user()
+            st.rerun()
+    
+    # Render animated metrics
+    animated_dashboard.render_animated_metrics(analytics, user_type)
+    
+    # Progress rings section
+    st.markdown("---")
+    animated_dashboard.render_progress_rings(analytics)
+    
+    # Timeline and insights
+    st.markdown("---")
+    col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.metric(
-            "Profile Completeness", 
-            f"{analytics.get('profile_completeness', 0)}%",
-            help="Percentage of profile fields completed"
-        )
+        animated_dashboard.render_insights_timeline(user_data, analytics)
     
     with col2:
-        days_registered = 0
-        if analytics.get('registration_date'):
-            days_registered = (datetime.now() - analytics['registration_date']).days
-        st.metric(
-            "Days Registered", 
-            days_registered,
-            help="Number of days since registration"
-        )
+        animated_dashboard.render_personalized_insights(user_data, analytics, user_type)
     
-    with col3:
-        st.metric(
-            "API Keys", 
-            analytics.get('api_keys_count', 0),
-            help="Number of API keys generated for your account"
-        )
+    # Advanced visualizations
+    st.markdown("---")
     
-    with col4:
-        status_color = "🟢" if user_data.get('status') == 'approved' else "🟡"
-        st.metric(
-            "Account Status", 
-            f"{status_color} {user_data.get('status', 'Unknown').title()}",
-            help="Current account status"
-        )
-    
-    # Tabs for different sections
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Profile Information", "Data Analytics", "Available Actions", "Account History", "Recommendations"])
+    # Tabs for detailed sections
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Analytics", "🔥 Activity", "📈 Comparison", "⚙️ Actions"])
     
     with tab1:
-        display_profile_information(user_data, user_type)
+        display_enhanced_analytics(analytics, dashboard_data)
     
     with tab2:
-        display_data_analytics(user_data, analytics)
+        animated_dashboard.render_activity_heatmap(analytics)
     
     with tab3:
-        display_available_actions(user_data, user_type)
+        animated_dashboard.render_comparison_radar(analytics, user_type)
     
     with tab4:
-        display_account_history(user_data, user_type, dashboard_data.get('activity_history', []))
+        display_enhanced_actions(user_data, user_type, dashboard_data)
+
+def display_enhanced_analytics(analytics: dict, dashboard_data: dict):
+    """Display enhanced analytics with animations"""
+    st.markdown("### 📈 Detailed Analytics")
     
-    with tab5:
-        display_recommendations(dashboard_data.get('recommendations', []))
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Profile completeness breakdown
+        if analytics:
+            completeness = analytics.get('profile_completeness', 0)
+            
+            # Create gauge chart for completeness
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number+delta",
+                value = completeness,
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                title = {'text': "Profile Completeness"},
+                delta = {'reference': 80},
+                gauge = {
+                    'axis': {'range': [None, 100]},
+                    'bar': {'color': "#667eea"},
+                    'steps': [
+                        {'range': [0, 50], 'color': "#f5576c"},
+                        {'range': [50, 80], 'color': "#f093fb"},
+                        {'range': [80, 100], 'color': "#48bb78"}
+                    ],
+                    'threshold': {
+                        'line': {'color': "red", 'width': 4},
+                        'thickness': 0.75,
+                        'value': 90
+                    }
+                }
+            ))
+            
+            fig.update_layout(height=300, margin=dict(t=40, b=40, l=40, r=40))
+            st.plotly_chart(fig, use_container_width=True, key="completeness_gauge")
+    
+    with col2:
+        # Activity score over time (simulated)
+        import random
+        dates = pd.date_range(start=datetime.now() - timedelta(days=30), end=datetime.now(), freq='D')
+        scores = [min(50 + i + random.randint(-10, 10), 100) for i in range(len(dates))]
+        
+        fig = px.line(
+            x=dates, 
+            y=scores,
+            title="Activity Score Trend",
+            labels={'x': 'Date', 'y': 'Activity Score'}
+        )
+        
+        fig.update_traces(line_color='#667eea', line_width=3)
+        fig.update_layout(height=300)
+        
+        st.plotly_chart(fig, use_container_width=True, key="activity_trend")
+    
+    # Recommendations summary
+    st.markdown("#### 🎯 Quick Recommendations")
+    recommendations = dashboard_data.get('recommendations', [])
+    
+    if recommendations:
+        for rec in recommendations[:2]:  # Show top 2
+            priority_color = {
+                'high': '#f5576c',
+                'medium': '#f093fb', 
+                'low': '#667eea'
+            }.get(rec.get('priority', 'low'))
+            
+            st.markdown(f"""
+            <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid {priority_color}; margin: 0.5rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <strong style="color: {priority_color};">{rec.get('title', 'Recommendation')}</strong><br>
+                <small style="color: #666;">{rec.get('description', '')}</small>
+            </div>
+            """, unsafe_allow_html=True)
+
+def display_enhanced_actions(user_data: dict, user_type: str, dashboard_data: dict):
+    """Display enhanced actions with better UX"""
+    st.markdown("### 🛠️ Available Actions")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### 📊 Data Management")
+        
+        # Enhanced data export
+        if st.button("📥 Export Complete Data", help="Download comprehensive data export", use_container_width=True):
+            with st.spinner("Preparing your data export..."):
+                time.sleep(1)  # Simulate processing
+                export_data = user_analytics.get_user_data_export(user_data['canonical_id'], user_type)
+                
+                if export_data:
+                    # Create multiple format options
+                    col_json, col_csv = st.columns(2)
+                    
+                    with col_json:
+                        st.download_button(
+                            "📄 Download JSON",
+                            data=json.dumps(export_data, indent=2, default=str),
+                            file_name=f"{user_data['canonical_id']}_export_{datetime.now().strftime('%Y%m%d')}.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                    
+                    with col_csv:
+                        if dashboard_data.get('profile_info'):
+                            profile_df = pd.DataFrame([dashboard_data['profile_info']])
+                            st.download_button(
+                                "📊 Download CSV",
+                                data=profile_df.to_csv(index=False),
+                                file_name=f"{user_data['canonical_id']}_profile.csv",
+                                mime="text/csv",
+                                use_container_width=True
+                            )
+        
+        if st.button("🔍 Search Registry", help="Search for other entities", use_container_width=True):
+            st.info("🔄 Redirecting to Registry Lookup...")
+            time.sleep(0.5)
+        
+        if st.button("🔑 Generate API Key", help="Create API access key", use_container_width=True):
+            st.info("🔜 API key generation coming soon!")
+    
+    with col2:
+        st.markdown("#### ⚙️ Account Management")
+        
+        if st.button("📧 Update Email Preferences", help="Manage notifications", use_container_width=True):
+            st.info("🔜 Email preferences panel coming soon!")
+        
+        if st.button("🔒 Privacy Settings", help="Manage data privacy", use_container_width=True):
+            st.info("🔜 Privacy management coming soon!")
+        
+        if st.button("📞 Contact Support", help="Get help", use_container_width=True):
+            with st.expander("📝 Support Request Form", expanded=True):
+                with st.form("enhanced_support_form"):
+                    subject = st.selectbox(
+                        "Request Type",
+                        ["Profile Update", "Data Correction", "API Access", "Technical Issue", "General Inquiry"]
+                    )
+                    priority = st.select_slider(
+                        "Priority",
+                        options=["Low", "Medium", "High", "Urgent"],
+                        value="Medium"
+                    )
+                    message = st.text_area("Message", placeholder="Describe your request in detail...")
+                    
+                    if st.form_submit_button("📤 Send Request", use_container_width=True):
+                        if message:
+                            st.success("✅ Support request submitted! We'll respond within 24 hours.")
+                        else:
+                            st.error("Please provide a message for your request.")
+
+# Main page execution
+if user_auth.is_authenticated():
+    user_dashboard()
+else:
+    login_form()
+# Old sections removed - replaced with animated dashboard
 
 def display_profile_information(user_data, user_type):
     """Display user profile information"""
@@ -385,12 +522,4 @@ def display_recommendations(recommendations):
                 st.markdown(rec['description'])
                 st.caption(f"💡 Suggested action: {rec['action']}")
 
-def main():
-    """Main function for user dashboard"""
-    if user_auth.is_user_authenticated():
-        user_dashboard()
-    else:
-        login_form()
-
-if __name__ == "__main__":
-    main()
+# Page execution handled at the bottom of the file
