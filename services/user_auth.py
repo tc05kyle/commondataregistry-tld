@@ -22,7 +22,7 @@ class UserAuthService:
             # Check individuals first
             cursor.execute("""
                 SELECT canonical_id, first_name, last_name, email, phone, 
-                       address, birth_date, status, created_at, approved_at
+                       domain, status, request_date, approved_date
                 FROM individuals 
                 WHERE canonical_id = %s AND email = %s AND status = 'approved'
             """, (canonical_id, email))
@@ -40,21 +40,20 @@ class UserAuthService:
                     'last_name': individual_result[2],
                     'email': individual_result[3],
                     'phone': individual_result[4],
-                    'address': individual_result[5],
-                    'birth_date': individual_result[6],
-                    'status': individual_result[7],
-                    'created_at': individual_result[8],
-                    'approved_at': individual_result[9]
+                    'domain': individual_result[5],
+                    'status': individual_result[6],
+                    'created_at': individual_result[7],
+                    'approved_at': individual_result[8]
                 }
                 conn.close()
                 return True
             
             # Check organizations
             cursor.execute("""
-                SELECT canonical_id, organization_name, email, phone, address,
-                       website, industry, status, created_at, approved_at
+                SELECT canonical_id, organization_name, primary_contact_email, phone, address,
+                       website, domain, status, request_date, approved_date
                 FROM organizations 
-                WHERE canonical_id = %s AND email = %s AND status = 'approved'
+                WHERE canonical_id = %s AND primary_contact_email = %s AND status = 'approved'
             """, (canonical_id, email))
             
             organization_result = cursor.fetchone()
@@ -71,7 +70,7 @@ class UserAuthService:
                     'phone': organization_result[3],
                     'address': organization_result[4],
                     'website': organization_result[5],
-                    'industry': organization_result[6],
+                    'domain': organization_result[6],
                     'status': organization_result[7],
                     'created_at': organization_result[8],
                     'approved_at': organization_result[9]

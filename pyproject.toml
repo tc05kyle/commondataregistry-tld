@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.39.14",
     "datetime>=5.5",
+    "email-validator>=2.2.0",
     "pandas>=2.3.1",
     "plotly>=6.2.0",
     "psycopg2-binary>=2.9.10",
