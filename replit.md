@@ -44,6 +44,7 @@ Preferred communication style: Simple, everyday language.
 6. **Production Config** (`pages/6_Production_Config.py`)
 7. **User Dashboard** (`pages/7_User_Dashboard.py`)
 8. **Admin Dashboard** (`pages/8_Admin_Dashboard.py`) - System overview and health monitoring
+9. **Schema Migration** (`pages/9_Schema_Migration.py`) - Database migration to user-centric model
 
 ### Service Components
 - **Email Service**: SendGrid integration for notification emails with production features
@@ -142,5 +143,13 @@ Preferred communication style: Simple, everyday language.
 - **Recent Activity Feed**: Latest registrations and system activity with color-coded status
 - **Quick Actions**: Direct navigation to admin functions and management tools
 - **Real-time Data**: Live system statistics with automatic updates and health monitoring
+
+### User-Centric Canonical ID System (July 2025)
+- **New Database Schema**: User-centric data model with canonical IDs based on FirstInitial + LastName + Last4Phone + EmailHash
+- **Canonical ID Service**: Automated generation of unique identifiers using personal data components
+- **Migration System**: Complete database migration service with validation and rollback capabilities
+- **Multi-Contact Support**: Users can have multiple emails, phones, and organization relationships with primary designations
+- **Schema Migration Page**: Admin interface for transitioning from old to new database structure
+- **Backward Compatibility**: Migration preserves existing data while enabling new ID generation system
 
 The application follows a clean architecture pattern with clear separation between presentation, business logic, and data layers. The system is designed for scalability with proper error handling, logging, and security measures in place.
