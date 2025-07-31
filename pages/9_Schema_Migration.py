@@ -109,10 +109,10 @@ def main():
         <h3>🎯 New Canonical ID System</h3>
         <p>The new system creates user-centric canonical IDs with IP-address-like format:</p>
         <ul>
-            <li><strong>Format:</strong> FirstInitial.LastName.Last4OfPhone.EmailDomain</li>
-            <li><strong>Example:</strong> J.Smith.1234.DOM (like 192.168.1.1 for networks)</li>
-            <li><strong>Segments:</strong> 4 components for specific identity, 3 for "network" grouping</li>
-            <li><strong>Benefits:</strong> Human-readable, hierarchical, easy to parse and validate</li>
+            <li><strong>Format:</strong> FirstInitial.LastName.Last4OfPhone.FullEmail</li>
+            <li><strong>Example:</strong> J.Smith.6738.jsmith@hotmail.com (like 192.168.1.1 for networks)</li>
+            <li><strong>Segments:</strong> 4 components for specific identity, with email providing full contact context</li>
+            <li><strong>Benefits:</strong> Human-readable, hierarchical, includes direct contact information</li>
             <li>Each user can have multiple emails, phones, and organization relationships</li>
             <li>Only one primary email and phone per user</li>
             <li>Organizations linked to users through relationships table</li>
@@ -153,7 +153,7 @@ def main():
         with col2:
             st.markdown("**Format Structure:**")
             format_info = explain_format()
-            st.code("FirstInitial.LastName.Last4Phone.EmailDomain")
+            st.code("FirstInitial.LastName.Last4Phone.FullEmail")
             st.caption("Like IP addresses: readable, hierarchical, parseable")
         
         st.markdown("---")

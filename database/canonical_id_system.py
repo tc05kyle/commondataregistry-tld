@@ -8,12 +8,12 @@ class CanonicalIDService:
     """Service for generating and managing canonical IDs based on user identity"""
     
     def __init__(self):
-        self.id_pattern = r'^[A-Z]\.[A-Z]+\.[0-9]{4}\.[A-Z]{3}(\.[0-9]{2})?$'  # FirstInitial.LastName.Phone.EmailHash[.Counter]
+        self.id_pattern = r'^[A-Z]\.[A-Z]+\.[0-9]{4}\.[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\.[0-9]{2})?$'  # FirstInitial.LastName.Phone.Email[.Counter]
     
     def generate_canonical_id(self, first_name: str, last_name: str, primary_phone: str, primary_email: str) -> str:
         """
-        Generate canonical ID: FirstInitial.LastName.Last4OfPhone.EmailHash
-        Example: J.Smith.1234.DOM
+        Generate canonical ID: FirstInitial.LastName.Last4OfPhone.FullEmail
+        Example: J.Smith.6738.jsmith@hotmail.com
         """
         try:
             # Clean and validate inputs
@@ -24,12 +24,11 @@ class CanonicalIDService:
             phone_digits = re.sub(r'[^0-9]', '', primary_phone)
             last_4_phone = phone_digits[-4:] if len(phone_digits) >= 4 else phone_digits.zfill(4)
             
-            # Create simple email hash (first 3 chars of domain)
-            email_domain = primary_email.split('@')[1] if '@' in primary_email else 'unknown'
-            email_hash = re.sub(r'[^A-Za-z]', '', email_domain)[:3].upper().ljust(3, 'X')
+            # Use full email address as the 4th segment
+            clean_email = primary_email.strip().lower()
             
-            # Combine components with periods (IP-like format)
-            base_id = f"{first_initial}.{clean_last_name}.{last_4_phone}.{email_hash}"
+            # Combine components with periods (IP-like format with full email)
+            base_id = f"{first_initial}.{clean_last_name}.{last_4_phone}.{clean_email}"
             
             # Ensure ID is unique by checking database
             canonical_id = self._ensure_unique_id(base_id)
@@ -38,7 +37,7 @@ class CanonicalIDService:
             
         except Exception as e:
             st.error(f"Error generating canonical ID: {e}")
-            return f"ERROR.{hash(str(e)) % 1000:03d}.0000.ERR"
+            return f"ERROR.{hash(str(e)) % 1000:03d}.0000.error@unknown.com"
     
     def _ensure_unique_id(self, base_id: str) -> str:
         """Ensure the generated ID is unique in the database"""
@@ -98,13 +97,39 @@ class CanonicalIDService:
             parts = canonical_id.split('.')
             
             if len(parts) >= 4:
-                return {
-                    'first_initial': parts[0],
-                    'last_name_part': parts[1],
-                    'phone_digits': parts[2],
-                    'email_hash': parts[3],
-                    'counter': parts[4] if len(parts) > 4 else None
-                }
+                # Handle case where email might contain dots (need to rejoin email parts)
+                if len(parts) > 4 and '@' in '.'.join(parts[3:]):
+                    # Find where the email ends and counter begins
+                    email_parts = []
+                    counter = None
+                    
+                    for i, part in enumerate(parts[3:], 3):
+                        if '@' in part or (i > 3 and '@' in '.'.join(email_parts)):
+                            email_parts.append(part)
+                        elif part.isdigit() and len(part) == 2:
+                            # This is likely the counter
+                            counter = part
+                            break
+                        else:
+                            email_parts.append(part)
+                    
+                    full_email = '.'.join(email_parts)
+                    
+                    return {
+                        'first_initial': parts[0],
+                        'last_name_part': parts[1],
+                        'phone_digits': parts[2],
+                        'email': full_email,
+                        'counter': counter
+                    }
+                else:
+                    return {
+                        'first_initial': parts[0],
+                        'last_name_part': parts[1],
+                        'phone_digits': parts[2],
+                        'email': parts[3],
+                        'counter': parts[4] if len(parts) > 4 else None
+                    }
         except:
             pass
         

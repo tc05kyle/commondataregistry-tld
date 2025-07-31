@@ -10,7 +10,7 @@ def generate_examples():
             'last_name': 'Smith',
             'phone': '+1-555-123-4567',
             'email': 'john.smith@domain.com',
-            'expected_id': 'J.SMITH.4567.DOM'
+            'expected_id': 'J.SMITH.4567.john.smith@domain.com'
         },
         {
             'name': 'Maria Garcia-Rodriguez',
@@ -18,7 +18,7 @@ def generate_examples():
             'last_name': 'Garcia-Rodriguez',
             'phone': '(555) 987-6543',
             'email': 'maria@tech.startup.io',
-            'expected_id': 'M.GARCIARODRIGUEZ.6543.TEC'
+            'expected_id': 'M.GARCIARODRIGUEZ.6543.maria@tech.startup.io'
         },
         {
             'name': 'Alex Chen',
@@ -26,7 +26,7 @@ def generate_examples():
             'last_name': 'Chen',
             'phone': '555.555.1000',
             'email': 'a.chen@university.edu',
-            'expected_id': 'A.CHEN.1000.UNI'
+            'expected_id': 'A.CHEN.1000.a.chen@university.edu'
         },
         {
             'name': 'Dr. Sarah O\'Connor',
@@ -34,7 +34,7 @@ def generate_examples():
             'last_name': "O'Connor",
             'phone': '1-800-555-2020',
             'email': 'dr.sarah@medical.center.org',
-            'expected_id': 'S.OCONNOR.2020.MED'
+            'expected_id': 'S.OCONNOR.2020.dr.sarah@medical.center.org'
         }
     ]
     
@@ -43,31 +43,32 @@ def generate_examples():
 def explain_format():
     """Explain the canonical ID format structure"""
     return {
-        'format': 'FirstInitial.LastName.Last4Phone.EmailDomain',
+        'format': 'FirstInitial.LastName.Last4Phone.FullEmail',
         'segments': {
             '1': 'First Initial - Single uppercase letter from first name',
             '2': 'Last Name - Cleaned last name (letters only, uppercase)',
             '3': 'Phone Digits - Last 4 digits of primary phone number',
-            '4': 'Email Domain - First 3 letters of email domain (uppercase)'
+            '4': 'Full Email - Complete email address (lowercase)'
         },
         'examples': {
-            'individual': 'J.SMITH.1234.COM',
-            'organization': 'ORG.ACMECORP.5000.BIZ',
-            'with_counter': 'J.SMITH.1234.COM.01'
+            'individual': 'J.SMITH.1234.jsmith@hotmail.com',
+            'organization': 'ORG.ACMECORP.5000.contact@acme.biz',
+            'with_counter': 'J.SMITH.1234.jsmith@hotmail.com.01'
         },
         'benefits': [
-            'Human readable and memorable',
+            'Fully identifies the person with email context',
             'Hierarchical structure like IP addresses',
             'Easy to parse and validate',
             'Supports collision resolution with counters',
-            'Can group by segments (name patterns, domains, etc.)'
+            'Can group by email domains and providers',
+            'Direct email contact information embedded'
         ],
         'network_analogy': {
             'description': 'Like IP addresses, canonical IDs can be grouped by segments',
             'examples': {
-                'same_company': ['J.SMITH.1234.ACM', 'M.JONES.5678.ACM', 'R.BROWN.9012.ACM'],
-                'same_family': ['J.SMITH.1234.GMA', 'M.SMITH.5678.GMA', 'T.SMITH.9012.HOT'],
-                'same_region': ['A.CHEN.1000.UNI', 'B.WONG.2000.UNI', 'C.LIU.3000.UNI']
+                'same_company': ['J.SMITH.1234.jsmith@acme.com', 'M.JONES.5678.mjones@acme.com'],
+                'same_provider': ['J.SMITH.1234.jsmith@gmail.com', 'A.DOE.5678.adoe@gmail.com'],
+                'same_family': ['J.SMITH.1234.john@smithfamily.com', 'M.SMITH.5678.mary@smithfamily.com']
             }
         }
     }
@@ -75,14 +76,16 @@ def explain_format():
 def validate_canonical_id_examples():
     """Test canonical ID validation with various formats"""
     test_cases = [
-        {'id': 'J.SMITH.1234.COM', 'valid': True, 'reason': 'Standard format'},
-        {'id': 'J.SMITH.1234.COM.01', 'valid': True, 'reason': 'With counter'},
-        {'id': 'A.VERYLONGNAME.5678.ORG', 'valid': True, 'reason': 'Long last name'},
-        {'id': 'JSmith1234COM', 'valid': False, 'reason': 'No periods'},
-        {'id': 'J.smith.1234.com', 'valid': False, 'reason': 'Lowercase'},
-        {'id': 'J.SMITH.12345.COM', 'valid': False, 'reason': 'Phone too long'},
-        {'id': 'J.SMITH.123.COM', 'valid': False, 'reason': 'Phone too short'},
-        {'id': 'JJ.SMITH.1234.COM', 'valid': False, 'reason': 'Multiple initials'},
+        {'id': 'J.SMITH.1234.jsmith@hotmail.com', 'valid': True, 'reason': 'Standard format'},
+        {'id': 'J.SMITH.1234.jsmith@hotmail.com.01', 'valid': True, 'reason': 'With counter'},
+        {'id': 'A.VERYLONGNAME.5678.alex@company.org', 'valid': True, 'reason': 'Long last name'},
+        {'id': 'J.SMITH.1234.j.smith@sub.domain.com', 'valid': True, 'reason': 'Email with dots'},
+        {'id': 'JSmith1234jsmith@hotmail.com', 'valid': False, 'reason': 'No periods'},
+        {'id': 'J.smith.1234.jsmith@hotmail.com', 'valid': False, 'reason': 'Lowercase name'},
+        {'id': 'J.SMITH.12345.jsmith@hotmail.com', 'valid': False, 'reason': 'Phone too long'},
+        {'id': 'J.SMITH.123.jsmith@hotmail.com', 'valid': False, 'reason': 'Phone too short'},
+        {'id': 'JJ.SMITH.1234.jsmith@hotmail.com', 'valid': False, 'reason': 'Multiple initials'},
+        {'id': 'J.SMITH.1234.invalid-email', 'valid': False, 'reason': 'Invalid email format'},
     ]
     
     results = []
@@ -101,10 +104,10 @@ def validate_canonical_id_examples():
 def demo_parsing():
     """Demonstrate parsing canonical IDs into components"""
     test_ids = [
-        'J.SMITH.1234.COM',
-        'M.GARCIA.5678.ORG.01',
-        'A.CHEN.9999.EDU',
-        'S.OCONNOR.0123.GOV.99'
+        'J.SMITH.1234.jsmith@hotmail.com',
+        'M.GARCIA.5678.maria@company.org.01',
+        'A.CHEN.9999.a.chen@university.edu',
+        'S.OCONNOR.0123.sarah@medical.center.gov.99'
     ]
     
     parsed_results = []
