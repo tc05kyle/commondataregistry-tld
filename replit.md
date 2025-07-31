@@ -147,8 +147,9 @@ Preferred communication style: Simple, everyday language.
 - **Real-time Data**: Live system statistics with automatic updates and health monitoring
 
 ### User-Centric Canonical ID System (July 2025)
-- **New Database Schema**: User-centric data model with canonical IDs based on FirstInitial + LastName + Last4Phone + EmailHash
-- **Canonical ID Service**: Automated generation of unique identifiers using personal data components
+- **IP-like Canonical IDs**: Dot-separated format like `J.Smith.1234.DOM` for better readability and hierarchy
+- **New Database Schema**: User-centric data model with 4-segment canonical IDs (FirstInitial.LastName.Last4Phone.EmailDomain)
+- **Canonical ID Service**: Automated generation of unique identifiers using personal data components with period separation
 - **Migration System**: Complete database migration service with validation and rollback capabilities
 - **Multi-Contact Support**: Users can have multiple emails, phones, and organization relationships with primary designations
 - **Schema Migration Page**: Admin interface for transitioning from old to new database structure

@@ -8,12 +8,12 @@ class CanonicalIDService:
     """Service for generating and managing canonical IDs based on user identity"""
     
     def __init__(self):
-        self.id_pattern = r'^[A-Z][A-Z0-9]{4,15}$'  # First initial + lastname + phone digits + email hash
+        self.id_pattern = r'^[A-Z]\.[A-Z]+\.[0-9]{4}\.[A-Z]{3}(\.[0-9]{2})?$'  # FirstInitial.LastName.Phone.EmailHash[.Counter]
     
     def generate_canonical_id(self, first_name: str, last_name: str, primary_phone: str, primary_email: str) -> str:
         """
-        Generate canonical ID: FirstInitial + LastName + Last4OfPhone + EmailHash
-        Example: JSmith1234A7F
+        Generate canonical ID: FirstInitial.LastName.Last4OfPhone.EmailHash
+        Example: J.Smith.1234.DOM
         """
         try:
             # Clean and validate inputs
@@ -28,8 +28,8 @@ class CanonicalIDService:
             email_domain = primary_email.split('@')[1] if '@' in primary_email else 'unknown'
             email_hash = re.sub(r'[^A-Za-z]', '', email_domain)[:3].upper().ljust(3, 'X')
             
-            # Combine components
-            base_id = f"{first_initial}{clean_last_name}{last_4_phone}{email_hash}"
+            # Combine components with periods (IP-like format)
+            base_id = f"{first_initial}.{clean_last_name}.{last_4_phone}.{email_hash}"
             
             # Ensure ID is unique by checking database
             canonical_id = self._ensure_unique_id(base_id)
@@ -38,7 +38,7 @@ class CanonicalIDService:
             
         except Exception as e:
             st.error(f"Error generating canonical ID: {e}")
-            return f"ERROR{hash(str(e)) % 10000:04d}"
+            return f"ERROR.{hash(str(e)) % 1000:03d}.0000.ERR"
     
     def _ensure_unique_id(self, base_id: str) -> str:
         """Ensure the generated ID is unique in the database"""
@@ -57,10 +57,10 @@ class CanonicalIDService:
                 conn.close()
                 return base_id
             
-            # If exists, append numeric suffix
+            # If exists, append numeric suffix with period
             counter = 1
             while counter < 100:  # Prevent infinite loop
-                test_id = f"{base_id}{counter:02d}"
+                test_id = f"{base_id}.{counter:02d}"
                 cursor.execute("""
                     SELECT canonical_id FROM users WHERE canonical_id = %s
                     UNION 
@@ -77,43 +77,33 @@ class CanonicalIDService:
             
             # Fallback if too many duplicates
             import time
-            return f"{base_id}{int(time.time()) % 1000:03d}"
+            return f"{base_id}.{int(time.time()) % 1000:03d}"
             
         except Exception as e:
             # Fallback ID generation
             import time
-            return f"{base_id}{int(time.time()) % 1000:03d}"
+            return f"{base_id}.{int(time.time()) % 1000:03d}"
     
     def validate_canonical_id_format(self, canonical_id: str) -> bool:
         """Validate canonical ID format"""
         return bool(re.match(self.id_pattern, canonical_id))
     
     def parse_canonical_id(self, canonical_id: str) -> Dict[str, str]:
-        """Parse canonical ID to extract components"""
+        """Parse canonical ID to extract components from dot-separated format"""
         if not self.validate_canonical_id_format(canonical_id):
             return {}
         
         try:
-            # Basic parsing - this is approximate since the ID is hashed
-            first_initial = canonical_id[0]
+            # Split by periods for IP-like format: J.Smith.1234.DOM or J.Smith.1234.DOM.01
+            parts = canonical_id.split('.')
             
-            # Find where digits start (phone portion)
-            digit_start = -1
-            for i, char in enumerate(canonical_id[1:], 1):
-                if char.isdigit():
-                    digit_start = i
-                    break
-            
-            if digit_start > 1:
-                last_name_part = canonical_id[1:digit_start]
-                phone_part = canonical_id[digit_start:digit_start+4]
-                email_part = canonical_id[digit_start+4:digit_start+7]
-                
+            if len(parts) >= 4:
                 return {
-                    'first_initial': first_initial,
-                    'last_name_part': last_name_part,
-                    'phone_digits': phone_part,
-                    'email_hash': email_part
+                    'first_initial': parts[0],
+                    'last_name_part': parts[1],
+                    'phone_digits': parts[2],
+                    'email_hash': parts[3],
+                    'counter': parts[4] if len(parts) > 4 else None
                 }
         except:
             pass

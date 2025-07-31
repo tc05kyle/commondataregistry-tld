@@ -4,6 +4,7 @@ from services.migration_service import migration_service
 from database.canonical_id_system import canonical_id_service
 from database.connection import get_db_connection
 from utils.static_files import inject_custom_css
+from utils.canonical_id_examples import generate_examples, explain_format
 import pandas as pd
 
 # Page configuration
@@ -106,10 +107,12 @@ def main():
     st.markdown("""
     <div class="migration-info">
         <h3>🎯 New Canonical ID System</h3>
-        <p>The new system creates user-centric canonical IDs based on:</p>
+        <p>The new system creates user-centric canonical IDs with IP-address-like format:</p>
         <ul>
-            <li><strong>First Initial</strong> + <strong>Last Name</strong> + <strong>Last 4 digits of primary phone</strong> + <strong>Email domain hash</strong></li>
-            <li>Example: J + Smith + 1234 + DOM = JSmith1234DOM</li>
+            <li><strong>Format:</strong> FirstInitial.LastName.Last4OfPhone.EmailDomain</li>
+            <li><strong>Example:</strong> J.Smith.1234.DOM (like 192.168.1.1 for networks)</li>
+            <li><strong>Segments:</strong> 4 components for specific identity, 3 for "network" grouping</li>
+            <li><strong>Benefits:</strong> Human-readable, hierarchical, easy to parse and validate</li>
             <li>Each user can have multiple emails, phones, and organization relationships</li>
             <li>Only one primary email and phone per user</li>
             <li>Organizations linked to users through relationships table</li>
@@ -136,9 +139,26 @@ def main():
     
     with tab1:
         st.subheader("Preview Canonical ID Changes")
-        st.markdown("See how the new canonical ID system will affect existing records:")
+        st.markdown("See how the new IP-like canonical ID system will work:")
         
-        if st.button("Generate Preview", type="primary"):
+        # Show format explanation
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**New Format Examples:**")
+            examples = generate_examples()
+            for example in examples[:3]:
+                st.code(f"{example['name']} → {example['expected_id']}")
+        
+        with col2:
+            st.markdown("**Format Structure:**")
+            format_info = explain_format()
+            st.code("FirstInitial.LastName.Last4Phone.EmailDomain")
+            st.caption("Like IP addresses: readable, hierarchical, parseable")
+        
+        st.markdown("---")
+        
+        if st.button("Generate Preview from Current Data", type="primary"):
             with st.spinner("Generating preview..."):
                 preview_canonical_id_changes()
     
