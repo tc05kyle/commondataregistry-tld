@@ -191,6 +191,45 @@ def render_homepage():
         if st.button("📊 Admin Dashboard", use_container_width=True):
             st.switch_page("pages/8_Admin_Dashboard.py")
     
+    # Admin Login Section
+    st.markdown("---")
+    st.markdown("## 🔐 Admin Access")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        with st.form("admin_login_form"):
+            st.markdown("### Admin Login")
+            
+            admin_type = st.selectbox(
+                "Admin Type",
+                ["Individual Admin", "Organization Admin"],
+                key="homepage_admin_type"
+            )
+            
+            username = st.text_input("Username", key="homepage_username")
+            password = st.text_input("Password", type="password", key="homepage_password")
+            
+            if st.form_submit_button("Login to Admin Dashboard", use_container_width=True):
+                if authenticate_admin(username, password, admin_type):
+                    st.session_state.authenticated = True
+                    st.session_state.admin_type = admin_type
+                    st.session_state.admin_username = username
+                    st.success("Login successful! Redirecting to admin dashboard...")
+                    st.switch_page("pages/8_Admin_Dashboard.py")
+                else:
+                    st.error("Invalid credentials. Please try again.")
+    
+    # User Dashboard Access
+    st.markdown("---")
+    st.markdown("## 👤 User Access")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        if st.button("Access User Dashboard", use_container_width=True, type="secondary"):
+            st.switch_page("pages/7_User_Dashboard.py")
+    
     # Testimonial Section
     st.markdown("""
     <div class="testimonial-section">
@@ -234,6 +273,30 @@ def render_homepage():
         - Community forums
         - Priority enterprise support
         """)
+
+def authenticate_admin(username, password, admin_type):
+    """Authenticate admin user"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT username, password_hash, admin_type 
+            FROM admins 
+            WHERE username = %s AND admin_type = %s AND is_active = true
+        """, (username, admin_type))
+        
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if result and verify_password(password, result[1]):
+            return True
+        return False
+        
+    except Exception as e:
+        st.error(f"Authentication error: {e}")
+        return False
 
 def main():
     # Render the modern homepage

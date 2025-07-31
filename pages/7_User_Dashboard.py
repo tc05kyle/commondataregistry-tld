@@ -259,7 +259,7 @@ def display_enhanced_actions(user_data: dict, user_type: str, dashboard_data: di
                             st.error("Please provide a message for your request.")
 
 # Main page execution
-if user_auth.is_authenticated():
+if user_auth.is_user_authenticated():
     user_dashboard()
 else:
     login_form()
