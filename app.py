@@ -68,6 +68,7 @@ def render_homepage():
     <div class="nav-pills">
         <a href="/8_Admin_Dashboard" class="nav-pill">📊 Admin Dashboard</a>
         <a href="/9_Schema_Migration" class="nav-pill">🔄 Schema Migration</a>
+        <a href="/10_Gravatar_Integration" class="nav-pill">🌐 Gravatar Sync</a>
         <a href="/1_Individual_Admin" class="nav-pill">👤 Individual Management</a>
         <a href="/2_Organization_Admin" class="nav-pill">🏢 Organization Management</a>
         <a href="/3_Registration_Request" class="nav-pill">📝 Register Now</a>

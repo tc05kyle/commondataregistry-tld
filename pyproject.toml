@@ -15,6 +15,7 @@ dependencies = [
     "requests>=2.32.4",
     "sendgrid>=6.12.4",
     "streamlit>=1.46.1",
+    "trafilatura>=2.0.0",
     "uuid>=1.30",
     "validators>=0.35.0",
 ]
