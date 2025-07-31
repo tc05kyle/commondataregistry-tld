@@ -66,6 +66,7 @@ def render_homepage():
     # Navigation Pills
     st.markdown("""
     <div class="nav-pills">
+        <a href="/8_Admin_Dashboard" class="nav-pill">📊 Admin Dashboard</a>
         <a href="/1_Individual_Admin" class="nav-pill">👤 Individual Management</a>
         <a href="/2_Organization_Admin" class="nav-pill">🏢 Organization Management</a>
         <a href="/3_Registration_Request" class="nav-pill">📝 Register Now</a>
@@ -187,8 +188,8 @@ def render_homepage():
             st.switch_page("pages/5_Registry_Lookup.py")
     
     with col4:
-        if st.button("👤 Access Dashboard", use_container_width=True):
-            st.switch_page("pages/7_User_Dashboard.py")
+        if st.button("📊 Admin Dashboard", use_container_width=True):
+            st.switch_page("pages/8_Admin_Dashboard.py")
     
     # Testimonial Section
     st.markdown("""

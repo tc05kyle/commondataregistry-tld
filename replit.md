@@ -43,6 +43,7 @@ Preferred communication style: Simple, everyday language.
 5. **Registry Lookup** (`pages/5_Registry_Lookup.py`)
 6. **Production Config** (`pages/6_Production_Config.py`)
 7. **User Dashboard** (`pages/7_User_Dashboard.py`)
+8. **Admin Dashboard** (`pages/8_Admin_Dashboard.py`) - System overview and health monitoring
 
 ### Service Components
 - **Email Service**: SendGrid integration for notification emails with production features
@@ -130,5 +131,16 @@ Preferred communication style: Simple, everyday language.
 - Automatic table creation on startup
 - Default admin user seeding
 - Error handling for connection failures
+
+## Recent Changes
+
+### Admin Dashboard System (July 2025)
+- **Admin Dashboard Page**: Comprehensive system overview with real-time metrics and health monitoring
+- **System Health Checks**: Database, email service, API service, and storage status indicators
+- **Key Metrics Display**: Total registrations, pending requests, approved accounts, and API usage
+- **Interactive Analytics**: Registration trends charts and status distribution visualizations
+- **Recent Activity Feed**: Latest registrations and system activity with color-coded status
+- **Quick Actions**: Direct navigation to admin functions and management tools
+- **Real-time Data**: Live system statistics with automatic updates and health monitoring
 
 The application follows a clean architecture pattern with clear separation between presentation, business logic, and data layers. The system is designed for scalability with proper error handling, logging, and security measures in place.
