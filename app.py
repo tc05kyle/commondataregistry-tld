@@ -306,37 +306,142 @@ def authenticate_admin(username, password, admin_type):
         return False
 
 def main():
-    # Render the modern homepage
-    render_homepage()
+    # Check authentication status
+    if not st.session_state.get("authenticated", False):
+        # Show login page if not authenticated
+        login_page()
+    else:
+        # Show admin dashboard if authenticated
+        dashboard_page()
     
     # Add footer at the end
     if 'footer_html' in globals():
         close_page_with_footer(footer_html)
 
 def login_page():
-    st.subheader("Admin Login")
+    """Enhanced login page with registration options"""
     
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # Create page header
+    create_page_header("Login to Data Registry", "Access your admin dashboard or register as a new user", "🔐")
     
-    with col2:
-        with st.form("login_form"):
-            admin_type = st.selectbox(
-                "Admin Type",
-                ["Individual Admin", "Organization Admin"],
-                key="admin_type_select"
+    # Login/Registration tabs
+    tab1, tab2, tab3 = st.tabs(["👨‍💼 Admin Login", "👤 User Login", "📝 Register"])
+    
+    with tab1:
+        st.markdown("### Admin Login")
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col2:
+            with st.form("admin_login_form"):
+                admin_type = st.selectbox(
+                    "Admin Type",
+                    ["Individual Admin", "Organization Admin"],
+                    key="admin_type_select"
+                )
+                
+                username = st.text_input("Username", key="admin_username")
+                password = st.text_input("Password", type="password", key="admin_password")
+                
+                if st.form_submit_button("Login as Admin", use_container_width=True):
+                    if authenticate_admin(username, password, admin_type):
+                        st.session_state.authenticated = True
+                        st.session_state.admin_type = admin_type
+                        st.session_state.admin_username = username
+                        st.success("Login successful! Redirecting...")
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials or admin type mismatch")
+    
+    with tab2:
+        st.markdown("### User Login")
+        st.info("User login allows access to your registered profile and dashboard")
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col2:
+            with st.form("user_login_form"):
+                user_canonical_id = st.text_input("Canonical ID", key="user_canonical_id", 
+                                                help="Format: J.Smith.6738.jsmith@hotmail.com")
+                user_email = st.text_input("Email", key="user_email")
+                
+                if st.form_submit_button("Login as User", use_container_width=True):
+                    if authenticate_user(user_canonical_id, user_email):
+                        st.session_state.user_authenticated = True
+                        st.session_state.user_canonical_id = user_canonical_id
+                        st.session_state.user_email = user_email
+                        st.success("User login successful!")
+                        st.switch_page("pages/7_User_Dashboard.py")
+                    else:
+                        st.error("Invalid canonical ID or email")
+    
+    with tab3:
+        st.markdown("### Register New User")
+        st.info("New to the platform? Register for your canonical unique ID")
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col2:
+            registration_type = st.radio(
+                "Registration Type",
+                ["Individual", "Organization"],
+                horizontal=True
             )
             
-            username = st.text_input("Username", key="username")
-            password = st.text_input("Password", type="password", key="password")
-            
-            if st.form_submit_button("Login"):
-                if authenticate_admin(username, password, admin_type):
-                    st.session_state.authenticated = True
-                    st.session_state.admin_type = admin_type
-                    st.session_state.admin_username = username
-                    st.rerun()
+            if st.button("Start Registration", use_container_width=True):
+                if registration_type == "Individual":
+                    st.switch_page("pages/3_Registration_Request.py")
                 else:
-                    st.error("Invalid credentials or admin type mismatch")
+                    st.switch_page("pages/3_Registration_Request.py")
+    
+    # Quick navigation
+    st.markdown("---")
+    st.markdown("### Quick Access")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🔍 Search Registry", use_container_width=True):
+            st.switch_page("pages/5_Registry_Lookup.py")
+    
+    with col2:
+        if st.button("🔌 API Documentation", use_container_width=True):
+            st.switch_page("pages/4_API_Testing.py")
+    
+    with col3:
+        if st.button("📊 Public Dashboard", use_container_width=True):
+            render_homepage()
+
+def authenticate_user(canonical_id, email):
+    """Authenticate regular users using canonical ID and email"""
+    try:
+        # Check if using fallback storage first
+        if not st.session_state.get('database_connected', False):
+            from database.fallback_storage import fallback_storage
+            # Check in fallback storage - simplified check for now
+            return canonical_id and email and "@" in email
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check both individuals and organizations
+        cursor.execute("""
+            SELECT canonical_id, email, status FROM individuals 
+            WHERE canonical_id = %s AND email = %s AND status = 'approved'
+            UNION
+            SELECT canonical_id, primary_contact_email as email, status FROM organizations 
+            WHERE canonical_id = %s AND primary_contact_email = %s AND status = 'approved'
+        """, (canonical_id, email, canonical_id, email))
+        
+        result = cursor.fetchone()
+        return bool(result)
+        
+    except Exception as e:
+        st.error(f"User authentication error: {e}")
+        return False
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 def authenticate_admin(username, password, admin_type):
     """Authenticate admin users using database or fallback storage"""

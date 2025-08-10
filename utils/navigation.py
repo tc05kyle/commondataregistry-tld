@@ -18,17 +18,17 @@ def inject_navigation_components():
             <a href="/5_Registry_Lookup" class="nav-link">🔍 Search</a>
             <a href="/7_User_Dashboard" class="nav-link">👤 Profile</a>
         </nav>
-        <button class="navbar-toggle" onclick="toggleMobileNav()">☰</button>
+        <button class="navbar-toggle" id="mobileToggle">☰</button>
     </div>
     """
     
-    # Responsive Sidebar Toggle
+    # Responsive Sidebar Toggle (React-compatible)
     sidebar_html = """
-    <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <button class="sidebar-toggle" id="sidebarToggle">
         <span id="sidebar-icon">☰</span>
     </button>
     
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <div class="responsive-sidebar" id="responsiveSidebar">
         <div class="sidebar-content">
@@ -91,51 +91,59 @@ def inject_navigation_components():
     </div>
     """
     
-    # Enhanced JavaScript for navigation
+    # Enhanced JavaScript for navigation (fixed React compatibility)
     navigation_js = """
     <script>
-    function toggleSidebar() {
+    window.toggleSidebar = function() {
         const sidebar = document.getElementById('responsiveSidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const icon = document.getElementById('sidebar-icon');
         
-        if (sidebar.classList.contains('open')) {
-            closeSidebar();
-        } else {
-            sidebar.classList.add('open');
-            overlay.classList.add('active');
-            icon.innerHTML = '✕';
+        if (sidebar && overlay && icon) {
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                icon.innerHTML = '☰';
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                icon.innerHTML = '✕';
+            }
         }
-    }
+    };
     
-    function closeSidebar() {
+    window.closeSidebar = function() {
         const sidebar = document.getElementById('responsiveSidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const icon = document.getElementById('sidebar-icon');
         
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-        icon.innerHTML = '☰';
-    }
+        if (sidebar && overlay && icon) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            icon.innerHTML = '☰';
+        }
+    };
     
-    function toggleMobileNav() {
-        // Mobile navigation toggle logic
-        alert('Mobile navigation would expand here');
-    }
-    
-    // Close sidebar when clicking on links
+    // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+        // Add click handlers
+        const toggleButton = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (toggleButton) {
+            toggleButton.addEventListener('click', window.toggleSidebar);
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', window.closeSidebar);
+        }
+        
+        // Close sidebar when clicking links
         const sidebarLinks = document.querySelectorAll('.sidebar-item');
         sidebarLinks.forEach(link => {
-            link.addEventListener('click', closeSidebar);
-        });
-        
-        // Highlight current page in sidebar
-        const currentPath = window.location.pathname;
-        sidebarLinks.forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
-            }
+            link.addEventListener('click', function() {
+                setTimeout(window.closeSidebar, 100);
+            });
         });
     });
     </script>
