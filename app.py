@@ -5,6 +5,7 @@ from database.connection import init_database, get_db_connection
 from services.email_service import EmailService
 from utils.security import hash_password, verify_password
 from utils.static_files import inject_custom_css, display_logo
+from utils.navigation import inject_navigation_components, create_page_header, close_page_with_footer
 from utils.db_status import display_db_status
 # Production config import removed - fixing startup issue
 import hashlib
@@ -32,8 +33,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Inject custom CSS and setup static files
+# Inject custom CSS and enhanced navigation
 inject_custom_css()
+footer_html = inject_navigation_components()
 
 # Load homepage styles
 st.markdown("""
@@ -41,12 +43,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def render_homepage():
-    """Render the modern, colorful homepage"""
+    """Render the modern, colorful homepage with enhanced navigation"""
     
     # Load custom CSS
-    with open('static/css/homepage.css', 'r') as f:
-        css = f.read()
-    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    try:
+        with open('static/css/homepage.css', 'r') as f:
+            css = f.read()
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    except FileNotFoundError:
+        pass  # Use default styling
     
     # Hero Section
     st.markdown("""
@@ -303,6 +308,10 @@ def authenticate_admin(username, password, admin_type):
 def main():
     # Render the modern homepage
     render_homepage()
+    
+    # Add footer at the end
+    if 'footer_html' in globals():
+        close_page_with_footer(footer_html)
 
 def login_page():
     st.subheader("Admin Login")

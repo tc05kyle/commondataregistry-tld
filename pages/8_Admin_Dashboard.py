@@ -8,6 +8,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 from database.connection import get_db_connection
 from utils.static_files import inject_custom_css
+from utils.navigation import inject_navigation_components, create_page_header, close_page_with_footer, render_contextual_sidebar
 from services.email_service import EmailService
 import os
 
@@ -19,6 +20,7 @@ st.set_page_config(
 )
 
 inject_custom_css()
+footer_html = inject_navigation_components()
 
 def check_admin_access():
     """Check if user has admin access"""
@@ -543,6 +545,18 @@ def main():
         - Admin Type: {st.session_state.get('admin_type', 'Unknown')}
         - Session Active: ✅
         """)
+
+def main():
+    """Main admin dashboard function"""
+    check_admin_access()
+    
+    # Render contextual sidebar for admin dashboard
+    render_contextual_sidebar('admin')
+    
+    display_admin_dashboard()
+    
+    # Add footer at the end
+    close_page_with_footer(footer_html)
 
 if __name__ == "__main__":
     main()
